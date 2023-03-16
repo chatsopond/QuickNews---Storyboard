@@ -44,9 +44,15 @@ extension NewsTableViewController {
 extension NewsTableViewController {
   private func populateNews() {
     URLRequest.load(resource: ArticleList.all)
+      .observe(on: MainScheduler.instance)
+      .retry(3)
+      .catch { error in
+        print(error)
+        print(error.localizedDescription)
+        return Observable.just(.init(articles: []))
+      }
       .subscribe { [weak self] articleList in
         guard let self else { return }
-        guard let articleList else { return }
         self.articles = articleList.articles
         DispatchQueue.main.async {
           self.tableView.reloadData()
